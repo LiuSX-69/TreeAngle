@@ -3,29 +3,29 @@
 #' This function calculates angles from 2D data points using various methods.
 #' It filters data based on a starting point and computes angles using the specified method.
 #'
-#' @param data A matrix or data frame with 2 columns containing x and y coordinates
-#' @param alpha Numeric value between 0 and 1 specifying the quantile threshold (default = 0.95)
+#' @param data A matrix or data frame with 2 columns containing x and y coordinates.
+#' @param alpha Numeric value between 0 and 1 specifying the quantile threshold (default = 0.95).
 #' @param method Character string specifying the angle calculation method. 
-#'        Options: "min", "median", "equal", "mean", "neigh" (default = "mean")
-#' @param start Numeric vector of length 2 specifying the starting point coordinates (default = c(0,0))
+#'        Options: "min", "median", "equal", "mean", "neigh" (default = "mean").
+#' @param start Numeric vector of length 2 specifying the starting point coordinates (default = c(0,0)).
 #'
-#' @return A matrix containing angle information for the selected method
+#' @return A matrix containing angle information, point coordinates, and coefficients for the selected method.
 #'
 #' @examples
 #' \dontrun{
 #' # Generate sample data
 #' set.seed(123)
-#' sample_data <- matrix(rnorm(200), ncol = 2)
+#' sample_data <- matrix(rnorm(200, mean = 5), ncol = 2)
 #' 
 #' # Calculate angles using default parameters (mean method)
-#' result <- calculate_angle(sample_data)
+#' result <- calangle(sample_data)
 #' 
-#' # Calculate angles using min method
-#' result_min <- calculate_angle(sample_data, alpha = 0.9, method = "min")
+#' # Calculate angles using min method with custom alpha
+#' result_min <- calangle(sample_data, alpha = 0.9, method = "min")
 #' }
 #'
 #' @export
-calculate_angle <- function(data, alpha = 0.95, method = "mean", start = c(0,0)) {
+calangle <- function(data, alpha = 0.95, method = "mean", start = c(0,0)) {
   
   # Input validation
   if (!is.matrix(data) && !is.data.frame(data)) {
@@ -70,20 +70,24 @@ calculate_angle <- function(data, alpha = 0.95, method = "mean", start = c(0,0))
 
 #' Core angle calculation function
 #'
-#' This is the main function that performs the angle calculations.
-#' It implements the algorithm from the original R files.
+#' This is the internal function that performs the angle calculations.
 #'
-#' @param data Matrix with 2 columns containing x and y coordinates
-#' @param alpha Numeric value between 0 and 1 for quantile threshold
-#' @param start Numeric vector of length 2 for starting point coordinates
+#' @param data Matrix with 2 columns containing x and y coordinates.
+#' @param alpha Numeric value between 0 and 1 for quantile threshold.
+#' @param start Numeric vector of length 2 for starting point coordinates.
 #'
-#' @return A list containing all angle calculation methods
+#' @return A list containing all angle calculation methods.
 #'
 #' @keywords internal
 angle_alpha <- function(data, alpha, start) {
   
   # Filter data based on starting point
   data <- data[((data[,1] > start[1]) & (data[,2] > start[2])), , drop = FALSE]
+  
+  # Check if enough data points remain
+  if (nrow(data) < 2) {
+    stop("Not enough data points remaining after filtering by start coordinates.")
+  }
   
   # Calculate number of outliers to remove
   outnum <- floor(dim(data)[1] * (1 - alpha))
@@ -109,12 +113,12 @@ angle_alpha <- function(data, alpha, start) {
     return(angle)
   }
   
-  # Initialize vectors for storing results
+  # Initialize vectors
   Tan <- c()
   Angle <- c()
   Coef <- c()
   
-  # Calculate angles for each point
+  # Loop through data points
   for (i in 1:dim(data)[1]) {
     point <- data[i, ]
     coef <- ab(point, start)
@@ -125,7 +129,7 @@ angle_alpha <- function(data, alpha, start) {
     Angle <- c(Angle, angle)
   }
   
-  # Helper function for complementary angle calculation
+  # Helper function for comparisons
   comple <- function(outnum, Angle, orderup, orderdown) {
     updown <- c()
     anglevs <- c()
@@ -139,11 +143,10 @@ angle_alpha <- function(data, alpha, start) {
     return(list(updown, anglevs))
   }
   
-  # Order angles
   orderup <- order(-Angle)
   orderdown <- order(Angle)
   
-  # Handle different cases based on outnum
+  # Core logic handling different cases for outnum
   if (outnum == 0) {
     whereup <- orderup[1]
     wheredown <- orderdown[1]
@@ -166,7 +169,6 @@ angle_alpha <- function(data, alpha, start) {
     updown <- updownanglevs[[1]]
     anglevs <- updownanglevs[[2]]
     
-    # Calculate anglemin
     where <- order(anglevs)[1]
     whereup <- updown[where, 1]
     wheredown <- updown[where, 2]
@@ -180,7 +182,6 @@ angle_alpha <- function(data, alpha, start) {
     coefdown <- Coef[wheredown, ]
     angleminlist <- rbind(c(anglemin, tan2), pointup, pointdown, coefup, coefdown)
     
-    # Calculate angleequal
     if (outnum == 1) {
       angleequallist <- angleminlist
     } else if (outnum %% 2 == 0) {
@@ -202,34 +203,31 @@ angle_alpha <- function(data, alpha, start) {
       whereupup <- updown[where + 1, 1]
       wheredown <- updown[where, 2]
       wheredowndown <- updown[where + 1, 2]
-      pointup <- apply(data[c(whereup, whereupup), ], 2, mean)
+      pointup <- apply(data[c(whereup, whereupup), , drop = FALSE], 2, mean)
       coefup <- ab(pointup, start)
-      pointdown <- apply(data[c(wheredown, wheredowndown), ], 2, mean)
+      pointdown <- apply(data[c(wheredown, wheredowndown), , drop = FALSE], 2, mean)
       coefdown <- ab(pointdown, start)
       angleequal <- abs(mean(Angle[c(whereup, whereupup)]) - mean(Angle[c(wheredown, wheredowndown)]))
       tan2 <- tan(angleequal)
       angleequallist <- rbind(c(angleequal, tan2), pointup, pointdown, coefup, coefdown)
     }
     
-    # Calculate anglemean
     anglemean <- mean(anglevs)
     tan2 <- tan(anglemean)
-    pointup <- apply(data[updown[, 1], ], 2, mean)
+    pointup <- apply(data[updown[, 1], , drop = FALSE], 2, mean)
     coefup <- ab(pointup, start)
-    pointdown <- apply(data[updown[, 2], ], 2, mean)
+    pointdown <- apply(data[updown[, 2], , drop = FALSE], 2, mean)
     coefdown <- ab(pointdown, start)
     anglemeanlist <- rbind(c(anglemean, tan2), pointup, pointdown, coefup, coefdown)
     
-    # Calculate anglemedian
     anglemedian <- median(anglevs)
     tan2 <- tan(anglemedian)
-    pointup <- apply(data[updown[, 1], ], 2, median)
+    pointup <- apply(data[updown[, 1], , drop = FALSE], 2, median)
     coefup <- ab(pointup, start)
-    pointdown <- apply(data[updown[, 2], ], 2, median)
+    pointdown <- apply(data[updown[, 2], , drop = FALSE], 2, median)
     coefdown <- ab(pointdown, start)
     anglemedianlist <- rbind(c(anglemedian, tan2), pointup, pointdown, coefup, coefdown)
     
-    # Calculate angleneigh
     where <- order(anglevs)[1]
     whereup <- updown[where, 1]
     upnum <- which(orderup == whereup)
@@ -237,23 +235,20 @@ angle_alpha <- function(data, alpha, start) {
     wheredown <- updown[where, 2]
     downnum <- which(orderdown == wheredown)
     wheredowndown <- orderdown[ifelse(downnum == 1, downnum, downnum - 1)]
-    pointup <- apply(data[c(whereup, whereupup), ], 2, mean)
+    pointup <- apply(data[c(whereup, whereupup), , drop = FALSE], 2, mean)
     coefup <- ab(pointup, start)
-    pointdown <- apply(data[c(wheredown, wheredowndown), ], 2, mean)
+    pointdown <- apply(data[c(wheredown, wheredowndown), , drop = FALSE], 2, mean)
     coefdown <- ab(pointdown, start)
     angleneigh <- abs(mean(Angle[c(whereup, whereupup)]) - mean(Angle[c(wheredown, wheredowndown)]))
     tan2 <- tan(angleneigh)
     angleneighlist <- rbind(c(angleneigh, tan2), pointup, pointdown, coefup, coefdown)
   }
   
-  # Return all methods with original names (for internal use)
-  out <- list(
-    anglemin = angleminlist,
-    anglemedian = anglemedianlist,
-    angleequal = angleequallist,
-    anglemean = anglemeanlist,
-    angleneigh = angleneighlist
-  )
+  out <- list(anglemin = angleminlist, 
+              anglemedian = anglemedianlist, 
+              angleequal = angleequallist, 
+              anglemean = anglemeanlist, 
+              angleneigh = angleneighlist)
   
   return(out)
 }
