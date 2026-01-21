@@ -94,7 +94,7 @@ print(result_mat[1,1])
 | `method` | `"mean"` | String. | The strategy to aggregate candidate angles. The paper recommends `"mean"` for the estimator $\Delta \hat{\theta}$. Options: `"min"`, `"median"`, `"equal"`, `"mean"`, `"neigh"`. |
 | `normalize`| `TRUE` | Logical. | Whether to apply the **Algorithm 1** normalization (scaling by last gen SD, shifting by harmonic series). |
 | `target_sd`| `0.01` | Numeric. | The target standard deviation after scaling. This matches the term $\sqrt{10^{-4}}$ used in the original simulation code. It standardizes the spread of data clouds. |
-| `tau` | `0.1` | Numeric. | A hyperparameter $\tau$ that controls the magnitude of the **Dynamic Mean Shift** $\mu_i^*$. <br>Formula: $\mu_i^* = \sqrt{-2\ln(1-\alpha)\sigma_{target}^2 + \tau \sum_{k=1}^i \frac{1}{k}}$. <br>Larger `tau` moves later generations further from the origin, reducing overlap. |
+| `tau` | `0.1` | Numeric. | A hyperparameter $\tau$ that controls the magnitude of the **Dynamic Mean Shift** $\mu_i^\ast$. <br>Formula: $\mu_i^\ast = \sqrt{-2\ln(1-\alpha)\sigma_{\text{target}}^2 + \tau \sum_{k=1}^i \frac{1}{k}}$ <br>Larger `tau` moves later generations further from the origin, reducing overlap. |
 | `start` | `c(0,0)` | Numeric vector. | The **root point** ($x_0, y_0$) from which the rays emanate. Typically set to the origin for normalized increments. |
 
 ## Reference
