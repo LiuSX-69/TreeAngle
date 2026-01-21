@@ -4,20 +4,9 @@
 \alias{angle_alpha}
 \title{Core angle calculation function}
 \usage{
-angle_alpha(data, alpha, start)
-}
-\arguments{
-\item{data}{Matrix with 2 columns containing x and y coordinates}
-
-\item{alpha}{Numeric value between 0 and 1 for quantile threshold}
-
-\item{start}{Numeric vector of length 2 for starting point coordinates}
-}
-\value{
-A list containing all angle calculation methods
+angle_alpha(data, alpha, start, method_select)
 }
 \description{
-This is the main function that performs the angle calculations.
-It implements the algorithm from the original R files.
+Internal function containing the geometric logic.
 }
 \keyword{internal}

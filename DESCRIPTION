@@ -5,12 +5,12 @@ Version: 1.0.0
 Authors@R: 
     c(person(given = "Shanjun", family = "Mao", email = "shjmao@hnu.edu.cn", role = c("aut", "cre")),
       person(given = "Xiaodan", family = "Fan", role = "aut"),
-      person(given = "Jie", family = "Hu", role = "aut"))
+      person(given = "Jie", family = "Hu", role = "aut"),
+      person(given = "Sixuan", family = "Liu", role = "aut")
 Description: Implements the geometric statistic (Minimal Enclosing Angle) for quantifying the association between tree-shaped datasets, particularly for cell lineage gene expression data. This method accounts for spatial and temporal dependencies inherent in cell division and differentiation, providing a robust, topology-aware alternative to traditional vector-based correlation measures (e.g., Pearson correlation). Based on the methodology proposed by Mao, Fan, and Hu (2025).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.3
-Suggests: 
-    MASS
+Suggests: MASS
  
