@@ -1,4 +1,4 @@
-# TreeAngle: A Geometric Statistic for Quantifying Spatial-Temporal Association in Cell Lineage Trees
+# TreeAngle: A Geometric Statistic for Quantifying Spatial-Temporal Association in Cell Lineage Tree
 
 **TreeAngle** is an R package that implements a geometric statistic—the **Minimal Enclosing Angle ($\Delta \theta$)**—designed to quantify the spatial-temporal association in tree-shaped datasets, specifically for cell lineage gene expression data.
 
