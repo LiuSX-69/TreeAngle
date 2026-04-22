@@ -1,42 +1,8 @@
 # TreeAngle
 
-**TreeAngle** is an R package for computing the geometric **TreeAngle**
-statistic from paired generation-structured data, especially data arising from
-cell lineage studies.
+`TreeAngle` is an R package for computing the **TreeAngle** statistic, a geometric summary of association for paired generation-structured data. The package was motivated by cell lineage gene expression analysis, but it can also be used for other paired data organized by generation.
 
-The package is written for clean-environment use:
-- no absolute file paths,
-- no `source()` calls,
-- no hidden workspace dependence.
-
-## What the package does
-
-- computes the TreeAngle statistic from paired two-dimensional data;
-- optionally applies the manuscript normalization step when generation
-  information is available;
-- supports five summary rules:
-  - `"mean"` (recommended),
-  - `"min"`,
-  - `"median"`,
-  - `"equal"`,
-  - `"neigh"`;
-- generates synthetic manuscript-style data with `simdata()`.
-
----
-
-## Important input note
-
-`treeangle()` expects **paired 2D observations**, optionally grouped by
-generation.
-
-In the manuscript, these inputs are typically **generation-wise paired
-increments after preprocessing**, rather than a raw nested tree object.
-
-So the package accepts:
-
-1. a list of generation-specific two-column matrices/data frames;
-2. a matrix/data frame with columns `x`, `y`, and `generation`;
-3. a direct two-column matrix/data frame.
+The package is intentionally lightweight and uses minimal dependencies, which makes it easier to install and test in a clean R environment.
 
 ---
 
@@ -49,15 +15,42 @@ So the package accepts:
 remotes::install_github("LiuSX-69/TreeAngle")
 ```
 
-### From a local source package
+### From a local source tarball
 
 ```r
-install.packages("TreeAngle_1.0.1.tar.gz", repos = NULL, type = "source")
+install.packages("TreeAngle_<version>.tar.gz", repos = NULL, type = "source")
 ```
 
 ---
 
-## Main functions
+## Quick start
+
+```r
+library(TreeAngle)
+
+sim <- simdata(seed = 1)
+res <- treeangle(sim, alpha = 0.95, method = "mean")
+
+print(res)
+as.matrix(res)
+```
+
+---
+
+## Important note on `alpha`
+
+In the manuscript, the symbol `alpha` may denote a **tail probability**, so the corresponding coverage is `1 - alpha`.
+
+In this package, for user convenience and consistency with the original simulation scripts, the argument `alpha` denotes the **coverage proportion**.
+
+Therefore:
+
+- `alpha = 0.95` means that the estimated angle encloses approximately **95%** of points;
+- this corresponds to a manuscript-style tail probability of about **0.05**.
+
+---
+
+## Main function
 
 ```r
 treeangle(
@@ -68,59 +61,48 @@ treeangle(
   target_sd = 0.01,
   tau = 0.1
 )
-
-simdata(...)
 ```
 
----
+### Arguments
 
-## `treeangle()` arguments
+#### `data`
+Input data. Supported formats are:
 
-### `alpha`
-Coverage proportion used to construct the angle.
+1. a **list** of generation-specific two-column matrices or data frames;
+2. a **matrix/data frame** with columns `x`, `y`, and `generation`;
+3. a direct **two-column** matrix/data frame.
 
-- `alpha = 0.95` means the estimated angle encloses about 95% of points;
-- about `1 - alpha = 0.05` of points are allowed outside.
+Objects returned by `simdata()` can be passed directly to `treeangle()`.
 
-### `method`
+#### `alpha`
+Coverage proportion used to define the angle.
+
+- `alpha = 0.95` means that about 95% of points are enclosed;
+- about 5% of points are allowed outside.
+
+#### `method`
 Summary rule used to choose the final angle.
 
 Available values are:
 
-- `"mean"`: average of all valid candidate angles; recommended;
+- `"mean"`: average of valid candidate angles; recommended;
 - `"min"`: smallest candidate angle;
 - `"median"`: median candidate angle;
-- `"equal"`: central candidate pair;
-- `"neigh"`: neighborhood-adjusted candidate around the minimum.
+- `"equal"`: central candidate rule;
+- `"neigh"`: neighborhood-adjusted candidate rule.
 
-### `normalize`
+#### `normalize`
 Controls whether normalization is applied.
 
-- `normalize = NULL` (default):
-  - generation-structured input -> normalize automatically;
-  - direct two-column input -> do not normalize.
-- `normalize = TRUE`: force normalization; generation information is required.
-- `normalize = FALSE`: skip normalization.
+- `NULL` (default): normalize automatically for generation-structured input and skip normalization for direct two-column input;
+- `TRUE`: force normalization;
+- `FALSE`: skip normalization.
 
-### `target_sd`
-Target marginal standard deviation used in normalization.
+#### `target_sd`
+Target marginal standard deviation used in normalization. Default is `0.01`.
 
-Default:
-
-```r
-target_sd = 0.01
-```
-
-### `tau`
-Generation shift parameter used in normalization.
-
-Default:
-
-```r
-tau = 0.1
-```
-
-These defaults come from the original code/manuscript setting.
+#### `tau`
+Generation shift parameter used in normalization. Default is `0.1`.
 
 ---
 
@@ -129,8 +111,6 @@ These defaults come from the original code/manuscript setting.
 ### 1. Generation-wise list input
 
 ```r
-library(TreeAngle)
-
 sim <- simdata(
   generations = 6,
   rho = 0.7,
@@ -139,20 +119,14 @@ sim <- simdata(
   seed = 123
 )
 
-res <- treeangle(
-  sim,
-  alpha = 0.95,
-  method = "mean"
-)
-
+res <- treeangle(sim, alpha = 0.95, method = "mean")
 print(res)
-res$angle_degrees
 ```
 
 ### 2. Matrix/data frame with generation column
 
 ```r
-sim_mat <- simdata(
+sim <- simdata(
   generations = 6,
   rho = 0.7,
   decay = "power",
@@ -161,12 +135,10 @@ sim_mat <- simdata(
 )
 
 res <- treeangle(
-  sim_mat,
+  sim,
   alpha = 0.95,
-  method = "mean",
-  normalize = TRUE,
-  target_sd = 0.01,
-  tau = 0.1
+  method = "median",
+  normalize = TRUE
 )
 
 print(res)
@@ -175,12 +147,12 @@ print(res)
 ### 3. Direct two-column input
 
 ```r
-xy <- do.call(rbind, sim$data)
+sim <- simdata(format = "xy", seed = 123)
 
 res <- treeangle(
-  xy,
+  sim,
   alpha = 0.95,
-  method = "median",
+  method = "min",
   normalize = FALSE
 )
 
@@ -191,7 +163,7 @@ print(res)
 
 ## Output
 
-`treeangle()` returns a `treeangle_result` object.
+`treeangle()` returns an object of class `treeangle_result`.
 
 Important components include:
 
@@ -202,14 +174,15 @@ Important components include:
 - `upper_line`
 - `lower_line`
 - `method_table`
+- `result_matrix`
 
-The legacy 5 x 2 matrix form can be recovered by:
+The legacy matrix representation can be recovered by:
 
 ```r
 as.matrix(res)
 ```
 
-You can inspect all five method summaries from:
+All five method summaries can be inspected with:
 
 ```r
 res$method_table
@@ -219,8 +192,7 @@ res$method_table
 
 ## Simulating data
 
-`simdata()` generates generation-wise paired Gaussian data that can be passed
-directly to `treeangle()`.
+`simdata()` generates paired Gaussian data generation by generation and is designed to work directly with `treeangle()`.
 
 ```r
 sim <- simdata(
@@ -237,64 +209,45 @@ sim <- simdata(
 
 print(sim)
 
-treeangle(
-  sim,
-  alpha = 0.95,
-  method = "mean"
-)
+treeangle(sim, alpha = 0.95, method = "mean")
 ```
 
 ### Decay options
 
-- `decay = "power"` uses `rho^i`, which matches the manuscript simulation setup.
-- `decay = "linear"` reproduces the old root-level script logic more closely.
+- `decay = "power"` uses `rho^i`
+- `decay = "linear"` uses a generation-wise linear decay
 
 ---
 
-## Reproducing old script behavior
+## Reproducibility and package checks
 
-Your old root-level scripts used a linear generation decay and path-based
-simulation outside the package. The package version replaces that workflow with:
-
-```r
-sim <- simdata(
-  generations = 6,
-  rho = 0.7,
-  decay = "linear",
-  format = "matrix",
-  seed = 1
-)
-
-treeangle(
-  sim,
-  alpha = 0.95,
-  method = "mean",
-  normalize = TRUE,
-  target_sd = 0.01,
-  tau = 0.1
-)
-```
-
----
-
-## Clean-environment check
-
-Before resubmission, run in a fresh R session:
+Before submission or resubmission, run the package in a **clean R session**.
 
 ```r
 devtools::document()
+devtools::test()
 devtools::check()
 ```
 
-This will regenerate `NAMESPACE` and `man/` and check for missing dependencies,
-namespace problems, and undocumented arguments.
+A minimal smoke test is:
+
+```r
+library(TreeAngle)
+
+sim <- simdata(seed = 1)
+res <- treeangle(sim, alpha = 0.95, method = "mean")
+
+stopifnot(
+  inherits(res, "treeangle_result"),
+  is.finite(res$angle_degrees)
+)
+```
 
 ---
 
-## Reference
+## Citation
 
-If you use **TreeAngle**, please cite the associated manuscript:
+If you use `TreeAngle`, please cite the associated manuscript:
 
 > Mao, S., Fan, X., Hu, J., and Liu, S. (2025).  
-> A Geometric Statistic for Quantifying the Spatial-Temporal Association in Cell Lineage Gene Expression Data.
-```
+> *A Geometric Statistic for Quantifying the Spatial-Temporal Association in Cell Lineage Gene Expression Data.*
