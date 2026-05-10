@@ -124,5 +124,5 @@ When normalization is used:
 
 If you use `TreeAngle`, please cite the associated manuscript:
 
-> Mao, S., Fan, X., Hu, J., and Liu, S. (2025).  
-> *A Geometric Statistic for Quantifying the Spatial-Temporal Association in Cell Lineage Gene Expression Data.*
+> Mao, S., Liu, S., Fan, X. and Hu, J.  
+> *A Geometric Statistic for Quantifying the Spatial-Temporal Association in Cell Lineage Gene Expression Tree.*
