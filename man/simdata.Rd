@@ -11,8 +11,8 @@ simdata(
   mu = 7,
   sigma2 = 0.02,
   rho = 0.5,
-  decay = c("power", "linear"),
-  format = c("list", "matrix", "xy"),
+  decay = c("power", "linear", "linear_old"),
+  format = c("data.frame", "list", "matrix", "xy"),
   seed = NULL
 )
 }
@@ -35,45 +35,49 @@ recycled to both coordinates.}
 
 \item{rho}{Numeric scalar in \verb{[0, 1)}. Base correlation parameter.}
 
-\item{decay}{Character string. One of \code{"power"} or \code{"linear"}.}
+\item{decay}{Character string. One of \code{"power"}, \code{"linear"}, or
+\code{"linear_old"}.}
 
-\item{format}{Character string. One of \code{"list"}, \code{"matrix"}, or \code{"xy"}.}
+\item{format}{Deprecated. Kept only for backward compatibility. Ignored.
+\code{simdata()} always returns a data frame.}
 
 \item{seed}{Optional integer seed.}
 }
 \value{
-A \code{treeangle_simulation} object with components:
+A data frame with three columns:
 \itemize{
-\item \code{data}: simulated data in the requested format;
-\item \code{data_by_generation}: list of two-column matrices, one per generation;
-\item \code{correlation_by_generation}: correlation used in each generation;
-\item \code{n_by_generation}: number of observations in each generation;
-\item the simulation settings used to generate the data.
+\item \code{generation}: generation index;
+\item \code{x}: first coordinate;
+\item \code{y}: second coordinate.
 }
+
+The returned data frame also contains optional attributes
+\code{n_by_generation}, \code{correlation_by_generation}, and \code{simulation_settings}.
 }
 \description{
 \code{simdata()} generates synthetic paired Gaussian data generation by generation.
-The output is designed to be passed directly to \code{\link[=treeangle]{treeangle()}}.
+It returns a plain three-column data frame with columns:
+\code{generation}, \code{x}, and \code{y}.
 }
 \details{
+The output is designed to be passed directly to \code{\link[=treeangle]{treeangle()}}.
+
 The simulated values should be interpreted as paired observations or paired
 increments, not as a raw nested tree object.
 
-Two decay rules are available:
+Three decay rules are available:
 \itemize{
 \item \code{"power"} uses \code{rho^i}, matching the manuscript simulation setup;
-\item \code{"linear"} reproduces the old script logic more closely and uses
+\item \code{"linear"} uses the manuscript-style linear rule
+\code{rho * (1 - (i - 1) / generations)};
+\item \code{"linear_old"} reproduces the old script-style linear rule
 \code{rho * (1 - (i - 1) / (generations - 1))} when \code{generations > 1}.
 }
 }
 \examples{
-sim1 <- simdata(seed = 1)
-print(sim1)
-treeangle(sim1, alpha = 0.95, method = "mean")
-
-sim2 <- simdata(decay = "linear", format = "matrix", seed = 1)
-head(sim2$data)
-treeangle(sim2, normalize = TRUE)
+dat <- simdata(seed = 1)
+head(dat)
+treeangle(dat, alpha = 0.95, method = "mean")
 
 }
 \seealso{

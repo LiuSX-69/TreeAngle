@@ -13,14 +13,19 @@ Description: Computes the geometric TreeAngle statistic for paired generation-st
     data, with optional normalization following the TDDeltaTheta algorithm.
     The package accepts generation-wise list input, matrices or data frames
     with a generation column, or direct two-column paired data. It also provides
-    simulation utilities for manuscript-style synthetic data generation.
+    simulation utilities and an included example data set showing the expected
+    input format.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 Depends: 
     R (>= 4.1.0)
+Imports:
+    stats,
+    utils
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 URL: https://github.com/LiuSX-69/TreeAngle
 BugReports: https://github.com/LiuSX-69/TreeAngle/issues
+
+
  

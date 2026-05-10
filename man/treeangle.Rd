@@ -9,108 +9,100 @@ treeangle(
   alpha = 0.95,
   method = "mean",
   normalize = NULL,
-  target_sd = 0.01,
-  tau = 0.1
+  target_sd = 1,
+  tau = 0.1,
+  start = c(0, 0)
 )
 }
 \arguments{
-\item{data}{Input data. Supported formats are:
+\item{data}{Input data. Supported formats:
 \itemize{
-\item a list of generation-specific matrices/data frames, each with at least
-two numeric columns;
-\item a matrix/data frame with at least three columns, where columns 1 and 2
-are \code{x}, \code{y}, and column 3 is a positive integer generation index;
-\item a matrix/data frame with at least two numeric columns, in which case
-only columns 1 and 2 are used.
+\item a data frame or matrix with columns \code{generation}, \code{x}, \code{y};
+\item a data frame or matrix with columns \code{x}, \code{y}, \code{generation};
+\item a two-column matrix/data frame of paired observations or increments;
+\item a list of generation-specific two-column matrices/data frames;
+\item an old-style list \code{list(treeresidual1, treeresidual2)}, where each
+component is a generation list.
 }}
 
-\item{alpha}{Numeric scalar in \verb{(0, 1)}. This is the target coverage
-proportion. For example, \code{alpha = 0.95} means that about 95\\% of points are
-enclosed by the estimated angle.}
+\item{alpha}{Numeric scalar in \verb{(0, 1)}. Coverage proportion. For example,
+\code{alpha = 0.95} means that 95 percent of points are kept inside the angle.}
 
-\item{method}{Character string specifying the summary rule used to choose the
-final result. Must be one of \code{"mean"}, \code{"min"}, \code{"median"}, \code{"equal"}, or
-\code{"neigh"}.}
+\item{method}{Character string. One of \code{"mean"}, \code{"min"}, \code{"median"},
+\code{"equal"}, \code{"neigh"}, or \code{"all"}. The original names \code{"anglemean"},
+\code{"anglemin"}, \code{"anglemedian"}, \code{"angleequal"}, and \code{"angleneigh"} are also
+accepted.}
 
-\item{normalize}{Logical scalar or \code{NULL}. If \code{NULL} (default), normalization
-is applied automatically for generation-structured input and skipped for
-direct two-column input. Set \code{TRUE} or \code{FALSE} to override this behavior.}
+\item{normalize}{Logical scalar or \code{NULL}. If \code{NULL}, normalization is applied
+automatically to generation-structured input and skipped for direct
+two-column input.}
 
 \item{target_sd}{Positive numeric scalar. Target marginal standard deviation
-used in the normalization step. Used only when normalization is applied.
-Default is \code{0.01}.}
+used in normalization. The manuscript simulation uses \code{target_sd = 1}.
+To reproduce the old script target variance \code{0.0001}, use
+\code{target_sd = 0.01}.}
 
-\item{tau}{Non-negative numeric scalar. Generation shift parameter used in the
-normalization step. Used only when normalization is applied. Default is \code{0.1}.}
+\item{tau}{Non-negative numeric scalar. Generation shift parameter in the
+normalization step. Default is \code{0.1}.}
+
+\item{start}{Numeric vector of length two. Fixed intersect point of the two
+rays. Default is \code{c(0, 0)}.}
 }
 \value{
-A \code{treeangle_result} object. Important components are:
+A plain matrix or list.
+
+If \code{method != "all"}, the return value is a 5 x 2 numeric matrix.
+The row names are:
 \itemize{
-\item \code{angle_degrees}: estimated angle in degrees;
-\item \code{tan_angle}: tangent of the estimated angle;
-\item \code{upper_point}, \code{lower_point}: boundary points;
-\item \code{upper_line}, \code{lower_line}: slope and intercept of the two boundary lines;
-\item \code{method_table}: a table of the five available summary methods;
-\item \code{result_matrix}: legacy 5 x 2 matrix representation.
+\item \code{angle}: angle summary;
+\item \code{pointup}: point on the upper boundary ray;
+\item \code{pointdown}: point on the lower boundary ray;
+\item \code{coefup}: slope and intercept of the upper boundary line;
+\item \code{coefdown}: slope and intercept of the lower boundary line.
 }
 
-Use \code{print()} for a compact summary and \code{as.matrix()} to recover the legacy
-matrix form.
+The column names are \code{deg_x_slope} and \code{tan_y_intercept}.
+Their meanings depend on the row:
+\itemize{
+\item row \code{angle}: angle in degrees and tangent of the angle;
+\item rows \code{pointup} and \code{pointdown}: x-coordinate and y-coordinate;
+\item rows \code{coefup} and \code{coefdown}: slope and intercept.
+}
+
+If \code{method = "all"}, the return value is a list with names
+\code{anglemin}, \code{anglemedian}, \code{angleequal}, \code{anglemean}, and \code{angleneigh}.
 }
 \description{
-\code{treeangle()} computes the geometric TreeAngle statistic from paired
-two-dimensional data.
+\code{treeangle()} computes the sample TreeAngle statistic from paired
+two-dimensional observations or increments.
 }
 \details{
-Each row of the supplied data should represent one paired observation
-\verb{(x, y)}. For generation-structured input, rows are grouped by generation and
-the function can optionally apply the normalization step described in the
-manuscript before computing the angle.
+For generation-structured input, the normalization step in the manuscript
+can be applied before calculating the angle. The default behavior follows the
+TD Delta theta algorithm: generation-structured data are normalized
+automatically, while direct two-column data are not normalized.
 
-Supported input formats are:
+The output is deliberately kept close to the original script:
 \itemize{
-\item a list of generation-specific matrices/data frames, each with two numeric
-columns;
-\item a matrix/data frame with columns \code{x}, \code{y}, and \code{generation};
-\item a direct two-column matrix/data frame.
+\item \code{method = "mean"} returns the 5 x 2 matrix corresponding to \code{anglemean};
+\item \code{method = "min"} returns \code{anglemin};
+\item \code{method = "median"} returns \code{anglemedian};
+\item \code{method = "equal"} returns \code{angleequal};
+\item \code{method = "neigh"} returns \code{angleneigh};
+\item \code{method = "all"} returns the full list
+\code{anglemin}, \code{anglemedian}, \code{angleequal}, \code{anglemean}, \code{angleneigh}.
 }
-
-Objects returned by \code{\link[=simdata]{simdata()}} can be passed directly to \code{treeangle()}.
 }
 \examples{
-sim_list <- simdata(
-  generations = 6,
-  rho = 0.7,
-  decay = "linear",
-  format = "list",
-  seed = 123
-)
+dat <- simdata(seed = 1)
 
-res1 <- treeangle(
-  sim_list,
-  alpha = 0.95,
-  method = "mean"
-)
-print(res1)
+## Paper default: normalized TD Delta theta, using mean candidate angle
+treeangle(dat, alpha = 0.95, method = "mean")
 
-sim_matrix <- simdata(
-  generations = 6,
-  rho = 0.7,
-  decay = "power",
-  format = "matrix",
-  seed = 123
-)
+## Return all five original summaries
+treeangle(dat, alpha = 0.95, method = "all")
 
-res2 <- treeangle(
-  sim_matrix,
-  alpha = 0.95,
-  method = "median",
-  normalize = TRUE
-)
-print(res2)
-head(res2$method_table)
+## Without normalization, corresponding to the preliminary angle calculation
+treeangle(dat, alpha = 0.95, method = "mean", normalize = FALSE)
 
-}
-\seealso{
-\code{\link[=simdata]{simdata()}}
 }
