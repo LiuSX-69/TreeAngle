@@ -1,7 +1,6 @@
 # TreeAngle
 
 `TreeAngle` is an R package for computing the **TreeAngle** statistic, a geometric summary of association for paired generation-structured data.
-
 The package was motivated by cell lineage gene expression analysis, but the method can also be used for other paired data organized by generation.
 
 ## Installation
@@ -117,14 +116,9 @@ When normalization is used:
 ### Decay options
 
 - `decay = "power"` uses `rho^i`;
-- `decay = "linear"` uses the manuscript-style linear rule  
-  `rho * (1 - (i - 1) / generations)`;
+- `decay = "linear"` uses `rho * (1 - (i - 1) / generations)`
 
 
-## Accepted input objects
-
-`treeangle()` accepts several input representations, but the recommended interface is a data frame with columns `generation`, `x`, and `y`.
-Other supported formats, such as generation-wise lists or two-column numeric matrices, are mainly provided for compatibility with the original implementation.
 
 ## Citation
 
