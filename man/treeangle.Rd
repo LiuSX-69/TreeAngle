@@ -84,13 +84,13 @@ automatically, while direct two-column data are not normalized.
 
 The output is deliberately kept close to the original script:
 \itemize{
-\item \code{method = "mean"} returns the 5 x 2 matrix corresponding to \code{anglemean};
-\item \code{method = "min"} returns \code{anglemin};
-\item \code{method = "median"} returns \code{anglemedian};
-\item \code{method = "equal"} returns \code{angleequal};
-\item \code{method = "neigh"} returns \code{angleneigh};
+\item \code{method = "mean"} (default)returns the average of all valid candidate angles.;
+\item \code{method = "min"} returns the smallest valid candidate angle;
+\item \code{method = "median"} returns the median of all valid candidate angles;
+\item \code{method = "equal"} returns the candidate chosen by the equal-allocation rule from the original implementation;
+\item \code{method = "neigh"} returns the candidate chosen by the neighborhood-adjusted rule from the original implementation;
 \item \code{method = "all"} returns the full list
-\code{anglemin}, \code{anglemedian}, \code{angleequal}, \code{anglemean}, \code{angleneigh}.
+\code{min}, \code{median}, \code{equal}, \code{mean}, \code{neigh}.
 }
 }
 \examples{

@@ -3,9 +3,9 @@
 #' This function reads a small example CSV file shipped with the package.
 #' The file was generated using [simdata()] with a fixed random seed.
 #'
-#' The returned data frame shows the recommended real-data input format.
-#' It contains metadata columns `cell` and `parent`, and the required columns
-#' `generation`, `x`, and `y`.
+#' The returned data frame shows the recommended real-data input format:
+#' one row per paired observation or increment, with columns `generation`,
+#' `x`, and `y`.
 #'
 #' @return A data frame with columns `generation`, `x`, and `y`.
 #'
@@ -30,13 +30,13 @@ treeangle_example_data <- function() {
     "treeangle_example.csv",
     package = "TreeAngle"
   )
-  
+
   if (!nzchar(path)) {
     stop(
       "Example data file was not found. Please reinstall TreeAngle.",
       call. = FALSE
     )
   }
-  
+
   utils::read.csv(path, stringsAsFactors = FALSE)
 }

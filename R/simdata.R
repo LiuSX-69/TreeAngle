@@ -9,13 +9,11 @@
 #' The simulated values should be interpreted as paired observations or paired
 #' increments, not as a raw nested tree object.
 #'
-#' Three decay rules are available:
+#' Two decay rules are available:
 #'
 #' - `"power"` uses `rho^i`, matching the manuscript simulation setup;
 #' - `"linear"` uses the manuscript-style linear rule
-#'   `rho * (1 - (i - 1) / generations)`;
-#' - `"linear_old"` reproduces the old script-style linear rule
-#'   `rho * (1 - (i - 1) / (generations - 1))` when `generations > 1`.
+#'   `rho * (1 - (i - 1) / generations)`.
 #'
 #' @param generations Positive integer. Number of generations.
 #' @param branching Positive integer. Branching factor. `2` corresponds to a
@@ -29,8 +27,7 @@
 #' variances of the paired Gaussian observations. If a scalar is supplied, it is
 #' recycled to both coordinates.
 #' @param rho Numeric scalar in `[0, 1)`. Base correlation parameter.
-#' @param decay Character string. One of `"power"`, `"linear"`, or
-#' `"linear_old"`.
+#' @param decay Character string. One of `"power"` or `"linear"`.
 #' @param format Deprecated. Kept only for backward compatibility. Ignored.
 #' `simdata()` always returns a data frame.
 #' @param seed Optional integer seed.
@@ -59,13 +56,13 @@ simdata <- function(generations = 6,
                     mu = 7,
                     sigma2 = 0.02,
                     rho = 0.5,
-                    decay = c("power", "linear", "linear_old"),
+                    decay = c("power", "linear"),
                     format = c("data.frame", "list", "matrix", "xy"),
                     seed = NULL) {
   call <- match.call()
   decay <- match.arg(decay)
 
-  # format 只保留兼容旧代码，不再决定返回类型
+  # Kept only for backward compatibility. It no longer controls the output type.
   requested_format <- match.arg(format)
 
   generations <- validate_positive_integer_scalar(generations, "generations")
@@ -86,14 +83,25 @@ simdata <- function(generations = 6,
     stop("'sigma2' must contain positive finite numeric values.", call. = FALSE)
   }
 
-  if (!is.numeric(rho) || length(rho) != 1L || is.na(rho) ||
-      !is.finite(rho) || rho < 0 || rho >= 1) {
+  if (
+    !is.numeric(rho) ||
+      length(rho) != 1L ||
+      is.na(rho) ||
+      !is.finite(rho) ||
+      rho < 0 ||
+      rho >= 1
+  ) {
     stop("'rho' must be a single numeric value in [0, 1).", call. = FALSE)
   }
 
   if (!is.null(seed)) {
-    if (!is.numeric(seed) || length(seed) != 1L || is.na(seed) ||
-        !is.finite(seed) || seed != floor(seed)) {
+    if (
+      !is.numeric(seed) ||
+        length(seed) != 1L ||
+        is.na(seed) ||
+        !is.finite(seed) ||
+        seed != floor(seed)
+    ) {
       stop("'seed' must be NULL or a single integer value.", call. = FALSE)
     }
 
@@ -103,8 +111,10 @@ simdata <- function(generations = 6,
   generation_index <- seq_len(generations)
   n_by_generation <- observations_per_node * branching^generation_index
 
-  if (any(!is.finite(n_by_generation)) ||
-      any(n_by_generation > .Machine$integer.max)) {
+  if (
+    any(!is.finite(n_by_generation)) ||
+      any(n_by_generation > .Machine$integer.max)
+  ) {
     stop(
       "The requested simulation size is too large for integer indexing. ",
       "Please reduce 'generations', 'branching', or 'observations_per_node'.",
@@ -138,7 +148,6 @@ simdata <- function(generations = 6,
 
   names(data_by_generation) <- paste0("generation_", seq_len(generations))
 
-  # 核心修改：直接返回普通三列 data.frame
   out <- do.call(
     rbind,
     lapply(seq_along(data_by_generation), function(i) {
@@ -155,7 +164,6 @@ simdata <- function(generations = 6,
   row.names(out) <- NULL
   out$generation <- as.integer(out$generation)
 
-  # 这些信息作为属性保留，不影响 out 作为普通 data.frame 使用
   attr(out, "n_by_generation") <- n_by_generation
   attr(out, "correlation_by_generation") <- correlation_by_generation
   attr(out, "simulation_settings") <- list(
@@ -175,8 +183,14 @@ simdata <- function(generations = 6,
 }
 
 validate_positive_integer_scalar <- function(x, arg_name) {
-  if (!is.numeric(x) || length(x) != 1L || is.na(x) ||
-      !is.finite(x) || x <= 0 || x != floor(x)) {
+  if (
+    !is.numeric(x) ||
+      length(x) != 1L ||
+      is.na(x) ||
+      !is.finite(x) ||
+      x <= 0 ||
+      x != floor(x)
+  ) {
     stop(
       "'",
       arg_name,
@@ -221,15 +235,7 @@ correlation_sequence <- function(generations, rho, decay) {
     return(rho^index)
   }
 
-  if (decay == "linear") {
-    return(rho * (1 - (index - 1) / generations))
-  }
-
-  if (generations == 1L) {
-    return(rho)
-  }
-
-  rho * (1 - (index - 1) / (generations - 1))
+  rho * (1 - (index - 1) / generations)
 }
 
 covariance_matrix <- function(sigma2, correlation) {

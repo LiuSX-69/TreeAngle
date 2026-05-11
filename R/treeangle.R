@@ -10,13 +10,13 @@
 #'
 #' The output is deliberately kept close to the original script:
 #'
-#' - `method = "mean"` returns the 5 x 2 matrix corresponding to `anglemean`;
-#' - `method = "min"` returns `anglemin`;
-#' - `method = "median"` returns `anglemedian`;
-#' - `method = "equal"` returns `angleequal`;
-#' - `method = "neigh"` returns `angleneigh`;
+#' - `method = "mean"` (default)returns the average of all valid candidate angles.;
+#' - `method = "min"` returns the smallest valid candidate angle;
+#' - `method = "median"` returns the median of all valid candidate angles;
+#' - `method = "equal"` returns the candidate chosen by the equal-allocation rule from the original implementation;
+#' - `method = "neigh"` returns the candidate chosen by the neighborhood-adjusted rule from the original implementation;
 #' - `method = "all"` returns the full list
-#'   `anglemin`, `anglemedian`, `angleequal`, `anglemean`, `angleneigh`.
+#'   `min`, `median`, `equal`, `mean`, `neigh`.
 #'
 #' @param data Input data. Supported formats:
 #' \itemize{
@@ -92,13 +92,21 @@ treeangle <- function(data,
 
   method <- match_treeangle_method(method)
 
-  if (!is.null(normalize) &&
-      !(is.logical(normalize) && length(normalize) == 1L && !is.na(normalize))) {
+  if (
+    !is.null(normalize) &&
+      !(is.logical(normalize) &&
+        length(normalize) == 1L &&
+        !is.na(normalize))
+  ) {
     stop("'normalize' must be TRUE, FALSE, or NULL.", call. = FALSE)
   }
 
-  if (!is.numeric(start) || length(start) != 2L || anyNA(start) ||
-      any(!is.finite(start))) {
+  if (
+    !is.numeric(start) ||
+      length(start) != 2L ||
+      anyNA(start) ||
+      any(!is.finite(start))
+  ) {
     stop("'start' must be a finite numeric vector of length 2.", call. = FALSE)
   }
 
@@ -116,13 +124,23 @@ treeangle <- function(data,
   )
 
   if (normalize_flag) {
-    if (!is.numeric(target_sd) || length(target_sd) != 1L ||
-        is.na(target_sd) || !is.finite(target_sd) || target_sd <= 0) {
+    if (
+      !is.numeric(target_sd) ||
+        length(target_sd) != 1L ||
+        is.na(target_sd) ||
+        !is.finite(target_sd) ||
+        target_sd <= 0
+    ) {
       stop("'target_sd' must be a single positive numeric value.", call. = FALSE)
     }
 
-    if (!is.numeric(tau) || length(tau) != 1L ||
-        is.na(tau) || !is.finite(tau) || tau < 0) {
+    if (
+      !is.numeric(tau) ||
+        length(tau) != 1L ||
+        is.na(tau) ||
+        !is.finite(tau) ||
+        tau < 0
+    ) {
       stop("'tau' must be a single non-negative numeric value.", call. = FALSE)
     }
   }
@@ -150,8 +168,14 @@ treeangle <- function(data,
 }
 
 validate_treeangle_alpha <- function(alpha) {
-  if (!is.numeric(alpha) || length(alpha) != 1L || is.na(alpha) ||
-      !is.finite(alpha) || alpha <= 0 || alpha >= 1) {
+  if (
+    !is.numeric(alpha) ||
+      length(alpha) != 1L ||
+      is.na(alpha) ||
+      !is.finite(alpha) ||
+      alpha <= 0 ||
+      alpha >= 1
+  ) {
     stop(
       "'alpha' must be a single numeric value strictly between 0 and 1.",
       call. = FALSE
@@ -293,7 +317,8 @@ select_numeric_columns <- function(x, cols, object_name) {
   if (anyNA(out) || any(!is.finite(out))) {
     stop(
       object_name,
-      " contains missing, infinite, or non-numeric values in the required columns.",
+      " contains missing, infinite, or non-numeric values in the required ",
+      "columns.",
       call. = FALSE
     )
   }
@@ -325,7 +350,8 @@ detect_input_type <- function(data) {
 
   if (!is.matrix(data) && !is.data.frame(data)) {
     stop(
-      "'data' must be a list, matrix, data frame, or an object returned by simdata().",
+      "'data' must be a list, matrix, data frame, or an object returned by ",
+      "simdata().",
       call. = FALSE
     )
   }
@@ -347,10 +373,12 @@ detect_input_type <- function(data) {
   if (ncol(data_matrix) >= 3L) {
     generation_column <- suppressWarnings(as.numeric(data_matrix[, 3]))
 
-    if (all(!is.na(generation_column)) &&
+    if (
+      all(!is.na(generation_column)) &&
         all(is.finite(generation_column)) &&
         all(generation_column > 0) &&
-        all(generation_column == floor(generation_column))) {
+        all(generation_column == floor(generation_column))
+    ) {
       return("generation_matrix")
     }
   }
@@ -410,8 +438,10 @@ parse_generation_data <- function(data) {
 
   generation_column <- data_matrix[, "generation"]
 
-  if (any(generation_column < 1) ||
-      any(generation_column != floor(generation_column))) {
+  if (
+    any(generation_column < 1) ||
+      any(generation_column != floor(generation_column))
+  ) {
     stop("The generation column must contain positive integers.", call. = FALSE)
   }
 
@@ -469,8 +499,12 @@ parse_paired_generation_list <- function(data) {
       stop("Generation ", i, " contains no observations.", call. = FALSE)
     }
 
-    if (anyNA(x_i) || anyNA(y_i) ||
-        any(!is.finite(x_i)) || any(!is.finite(y_i))) {
+    if (
+      anyNA(x_i) ||
+        anyNA(y_i) ||
+        any(!is.finite(x_i)) ||
+        any(!is.finite(y_i))
+    ) {
       stop(
         "Generation ",
         i,
@@ -537,8 +571,12 @@ normalize_generation_data <- function(data_list, alpha, target_sd, tau) {
       )
     }
 
-    generation_matrix[, 1] <- generation_matrix[, 1] / generation_sd[1] * target_sd
-    generation_matrix[, 2] <- generation_matrix[, 2] / generation_sd[2] * target_sd
+    generation_matrix[, 1] <- generation_matrix[, 1] /
+      generation_sd[1] *
+      target_sd
+    generation_matrix[, 2] <- generation_matrix[, 2] /
+      generation_sd[2] *
+      target_sd
 
     harmonic_term <- sum(1 / seq_len(i))
 
@@ -547,10 +585,12 @@ normalize_generation_data <- function(data_list, alpha, target_sd, tau) {
     )
 
     generation_matrix[, 1] <- generation_matrix[, 1] -
-      mean(generation_matrix[, 1]) + shift_value
+      mean(generation_matrix[, 1]) +
+      shift_value
 
     generation_matrix[, 2] <- generation_matrix[, 2] -
-      mean(generation_matrix[, 2]) + shift_value
+      mean(generation_matrix[, 2]) +
+      shift_value
 
     colnames(generation_matrix) <- c("x", "y")
     generation_matrix
@@ -571,8 +611,12 @@ anglealpha <- function(data,
                        start = c(0, 0)) {
   validate_treeangle_alpha(alpha)
 
-  if (!is.numeric(start) || length(start) != 2L || anyNA(start) ||
-      any(!is.finite(start))) {
+  if (
+    !is.numeric(start) ||
+      length(start) != 2L ||
+      anyNA(start) ||
+      any(!is.finite(start))
+  ) {
     stop("'start' must be a finite numeric vector of length 2.", call. = FALSE)
   }
 
@@ -595,7 +639,10 @@ anglealpha <- function(data,
   )
 
   if (anyNA(data) || any(!is.finite(data))) {
-    stop("'data' contains missing, infinite, or non-numeric values.", call. = FALSE)
+    stop(
+      "'data' contains missing, infinite, or non-numeric values.",
+      call. = FALSE
+    )
   }
 
   data <- data[
@@ -642,40 +689,41 @@ anglealpha <- function(data,
     (tanup - tandown) / (1 + tanup * tandown)
   }
 
-legacy_matrix <- function(angle_value,
-                          tan_value,
-                          pointup,
-                          pointdown,
-                          coefup,
-                          coefdown) {
-  out <- matrix(
-    as.numeric(c(
-      angle_value, tan_value,
-      pointup[1], pointup[2],
-      pointdown[1], pointdown[2],
-      coefup[1], coefup[2],
-      coefdown[1], coefdown[2]
-    )),
-    nrow = 5,
-    ncol = 2,
-    byrow = TRUE,
-    dimnames = list(
-      c(
-        "angle",
-        "pointup",
-        "pointdown",
-        "coefup",
-        "coefdown"
-      ),
-      c(
-        "deg_x_slope",
-        "tan_y_intercept"
+  legacy_matrix <- function(angle_value,
+                            tan_value,
+                            pointup,
+                            pointdown,
+                            coefup,
+                            coefdown) {
+    out <- matrix(
+      as.numeric(c(
+        angle_value, tan_value,
+        pointup[1], pointup[2],
+        pointdown[1], pointdown[2],
+        coefup[1], coefup[2],
+        coefdown[1], coefdown[2]
+      )),
+      nrow = 5,
+      ncol = 2,
+      byrow = TRUE,
+      dimnames = list(
+        c(
+          "angle",
+          "pointup",
+          "pointdown",
+          "coefup",
+          "coefdown"
+        ),
+        c(
+          "deg_x_slope",
+          "tan_y_intercept"
+        )
       )
     )
-  )
-  storage.mode(out) <- "double"
-  out
-}
+
+    storage.mode(out) <- "double"
+    out
+  }
 
   Tan <- c()
   Angle <- c()

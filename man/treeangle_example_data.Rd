@@ -14,9 +14,9 @@ This function reads a small example CSV file shipped with the package.
 The file was generated using \code{\link[=simdata]{simdata()}} with a fixed random seed.
 }
 \details{
-The returned data frame shows the recommended real-data input format.
-It contains metadata columns \code{cell} and \code{parent}, and the required columns
-\code{generation}, \code{x}, and \code{y}.
+The returned data frame shows the recommended real-data input format:
+one row per paired observation or increment, with columns \code{generation},
+\code{x}, and \code{y}.
 }
 \examples{
 dat <- treeangle_example_data()

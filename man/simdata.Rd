@@ -11,7 +11,7 @@ simdata(
   mu = 7,
   sigma2 = 0.02,
   rho = 0.5,
-  decay = c("power", "linear", "linear_old"),
+  decay = c("power", "linear"),
   format = c("data.frame", "list", "matrix", "xy"),
   seed = NULL
 )
@@ -35,8 +35,7 @@ recycled to both coordinates.}
 
 \item{rho}{Numeric scalar in \verb{[0, 1)}. Base correlation parameter.}
 
-\item{decay}{Character string. One of \code{"power"}, \code{"linear"}, or
-\code{"linear_old"}.}
+\item{decay}{Character string. One of \code{"power"} or \code{"linear"}.}
 
 \item{format}{Deprecated. Kept only for backward compatibility. Ignored.
 \code{simdata()} always returns a data frame.}
@@ -65,13 +64,11 @@ The output is designed to be passed directly to \code{\link[=treeangle]{treeangl
 The simulated values should be interpreted as paired observations or paired
 increments, not as a raw nested tree object.
 
-Three decay rules are available:
+Two decay rules are available:
 \itemize{
 \item \code{"power"} uses \code{rho^i}, matching the manuscript simulation setup;
 \item \code{"linear"} uses the manuscript-style linear rule
-\code{rho * (1 - (i - 1) / generations)};
-\item \code{"linear_old"} reproduces the old script-style linear rule
-\code{rho * (1 - (i - 1) / (generations - 1))} when \code{generations > 1}.
+\code{rho * (1 - (i - 1) / generations)}.
 }
 }
 \examples{
