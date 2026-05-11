@@ -1,6 +1,6 @@
-#' Compute the TreeAngle statistic
+#' Compute the Treeangle statistic
 #'
-#' `treeangle()` computes the sample TreeAngle statistic from paired
+#' `treeangle()` computes the sample Treeangle statistic from paired
 #' two-dimensional observations or increments.
 #'
 #' For generation-structured input, the normalization step in the manuscript
@@ -10,7 +10,7 @@
 #'
 #' The output is deliberately kept close to the original script:
 #'
-#' - `method = "mean"` (default)returns the average of all valid candidate angles.;
+#' - `method = "mean"` (default) returns the average of all valid candidate angles;
 #' - `method = "min"` returns the smallest valid candidate angle;
 #' - `method = "median"` returns the median of all valid candidate angles;
 #' - `method = "equal"` returns the candidate chosen by the equal-allocation rule from the original implementation;
@@ -658,7 +658,7 @@ anglealpha <- function(data,
     )
   }
 
-  outnum <- floor(nrow(data) * (1 - alpha))
+  out_num <- floor(nrow(data) * (1 - alpha))
 
   ab <- function(point, start) {
     a <- (point[2] - start[2]) / (point[1] - start[1])
@@ -672,7 +672,7 @@ anglealpha <- function(data,
 
     if (a >= 0) {
       angle <- atan(a) / pi * 180
-    } else if ((a < 0) & (pointtrans[1] < 0)) {
+    } else if ((a < 0) && (pointtrans[1] < 0)) {
       angle <- atan(a) / pi * 180 + 180
     } else {
       angle <- atan(a) / pi * 180
@@ -725,54 +725,48 @@ anglealpha <- function(data,
     out
   }
 
-  Tan <- c()
-  Angle <- c()
-  Coef <- NULL
+  coef_list <- lapply(seq_len(nrow(data)), function(i) ab(data[i, ], start))
+  coef_mat <- do.call(rbind, coef_list)
+  tan_vec <- coef_mat[, 1]
+  angle <- vapply(
+    seq_len(nrow(data)),
+    function(i) abangle(coef_mat[i, 1], coef_mat[i, 2], data[i, ], start),
+    numeric(1)
+  )
 
-  for (i in seq_len(nrow(data))) {
-    point <- data[i, ]
-    coef <- ab(point, start)
-
-    Tan <- c(Tan, coef[1])
-    Coef <- rbind(Coef, coef)
-
-    angle <- abangle(coef[1], coef[2], point, start)
-    Angle <- c(Angle, angle)
-  }
-
-  comple <- function(outnum, Angle, orderup, orderdown) {
+  compute_candidate_pairs <- function(out_num, angle, order_up, order_down) {
     updown <- NULL
-    anglevs <- c()
+    anglevs <- numeric(0)
 
-    for (i in seq_len(outnum + 1L)) {
-      up <- orderup[i]
-      down <- orderdown[outnum + 2L - i]
+    for (i in seq_len(out_num + 1L)) {
+      up <- order_up[i]
+      down <- order_down[out_num + 2L - i]
 
       updown <- rbind(updown, c(up, down))
-      anglevs <- c(anglevs, abs(Angle[up] - Angle[down]))
+      anglevs <- c(anglevs, abs(angle[up] - angle[down]))
     }
 
     list(updown, anglevs)
   }
 
-  orderup <- order(-Angle)
-  orderdown <- order(Angle)
+  order_up <- order(-angle)
+  order_down <- order(angle)
 
-  if (outnum == 0L) {
-    whereup <- orderup[1]
-    wheredown <- orderdown[1]
+  if (out_num == 0L) {
+    whereup <- order_up[1]
+    wheredown <- order_down[1]
 
-    anglemin <- abs(Angle[whereup] - Angle[wheredown])
+    anglemin <- abs(angle[whereup] - angle[wheredown])
 
-    tanup <- Tan[whereup]
-    tandown <- Tan[wheredown]
+    tanup <- tan_vec[whereup]
+    tandown <- tan_vec[wheredown]
     tan2 <- tan_between_slopes(tanup, tandown)
 
     pointup <- data[whereup, ]
-    coefup <- Coef[whereup, ]
+    coefup <- coef_mat[whereup, ]
 
     pointdown <- data[wheredown, ]
-    coefdown <- Coef[wheredown, ]
+    coefdown <- coef_mat[wheredown, ]
 
     angleminlist <- legacy_matrix(
       angle_value = anglemin,
@@ -788,7 +782,7 @@ anglealpha <- function(data,
     angleneighlist <- angleminlist
     anglemedianlist <- angleminlist
   } else {
-    updownanglevs <- comple(outnum, Angle, orderup, orderdown)
+    updownanglevs <- compute_candidate_pairs(out_num, angle, order_up, order_down)
     updown <- updownanglevs[[1]]
     anglevs <- updownanglevs[[2]]
 
@@ -798,15 +792,15 @@ anglealpha <- function(data,
 
     anglemin <- anglevs[where]
 
-    tanup <- Tan[whereup]
-    tandown <- Tan[wheredown]
+    tanup <- tan_vec[whereup]
+    tandown <- tan_vec[wheredown]
     tan2 <- tan_between_slopes(tanup, tandown)
 
     pointup <- data[whereup, ]
-    coefup <- Coef[whereup, ]
+    coefup <- coef_mat[whereup, ]
 
     pointdown <- data[wheredown, ]
-    coefdown <- Coef[wheredown, ]
+    coefdown <- coef_mat[wheredown, ]
 
     angleminlist <- legacy_matrix(
       angle_value = anglemin,
@@ -817,24 +811,24 @@ anglealpha <- function(data,
       coefdown = coefdown
     )
 
-    if (outnum == 1L) {
+    if (out_num == 1L) {
       angleequallist <- angleminlist
-    } else if (outnum %% 2L == 0L) {
-      where <- ceiling(outnum / 2)
+    } else if (out_num %% 2L == 0L) {
+      where <- ceiling(out_num / 2)
       whereup <- updown[where, 1]
       wheredown <- updown[where, 2]
 
       angleequal <- anglevs[where]
 
-      tanup <- Tan[whereup]
-      tandown <- Tan[wheredown]
+      tanup <- tan_vec[whereup]
+      tandown <- tan_vec[wheredown]
       tan2 <- tan_between_slopes(tanup, tandown)
 
       pointup <- data[whereup, ]
-      coefup <- Coef[whereup, ]
+      coefup <- coef_mat[whereup, ]
 
       pointdown <- data[wheredown, ]
-      coefdown <- Coef[wheredown, ]
+      coefdown <- coef_mat[wheredown, ]
 
       angleequallist <- legacy_matrix(
         angle_value = angleequal,
@@ -845,7 +839,7 @@ anglealpha <- function(data,
         coefdown = coefdown
       )
     } else {
-      where <- floor(outnum / 2)
+      where <- floor(out_num / 2)
 
       whereup <- updown[where, 1]
       whereupup <- updown[where + 1L, 1]
@@ -864,8 +858,8 @@ anglealpha <- function(data,
       coefdown <- ab(pointdown, start)
 
       angleequal <- abs(
-        mean(Angle[c(whereup, whereupup)]) -
-          mean(Angle[c(wheredown, wheredowndown)])
+        mean(angle[c(whereup, whereupup)]) -
+          mean(angle[c(wheredown, wheredowndown)])
       )
 
       tan2 <- tan_from_degrees(angleequal)
@@ -919,12 +913,12 @@ anglealpha <- function(data,
     where <- order(anglevs)[1]
 
     whereup <- updown[where, 1]
-    upnum <- which(orderup == whereup)
-    whereupup <- orderup[ifelse(upnum == 1L, upnum, upnum - 1L)]
+    upnum <- which(order_up == whereup)
+    whereupup <- order_up[ifelse(upnum == 1L, upnum, upnum - 1L)]
 
     wheredown <- updown[where, 2]
-    downnum <- which(orderdown == wheredown)
-    wheredowndown <- orderdown[ifelse(downnum == 1L, downnum, downnum - 1L)]
+    downnum <- which(order_down == wheredown)
+    wheredowndown <- order_down[ifelse(downnum == 1L, downnum, downnum - 1L)]
 
     pointup <- apply(data[c(whereup, whereupup), , drop = FALSE], 2, mean)
     coefup <- ab(pointup, start)
@@ -937,8 +931,8 @@ anglealpha <- function(data,
     coefdown <- ab(pointdown, start)
 
     angleneigh <- abs(
-      mean(Angle[c(whereup, whereupup)]) -
-        mean(Angle[c(wheredown, wheredowndown)])
+      mean(angle[c(whereup, whereupup)]) -
+        mean(angle[c(wheredown, wheredowndown)])
     )
 
     tan2 <- tan_from_degrees(angleneigh)

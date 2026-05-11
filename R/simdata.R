@@ -147,18 +147,10 @@ simdata <- function(generations = 6,
   })
 
   names(data_by_generation) <- paste0("generation_", seq_len(generations))
-
+  
   out <- do.call(
     rbind,
-    lapply(seq_along(data_by_generation), function(i) {
-      z <- data_by_generation[[i]]
-
-      data.frame(
-        generation = rep.int(i, nrow(z)),
-        x = z[, 1],
-        y = z[, 2]
-      )
-    })
+    Map(make_generation_df, seq_along(data_by_generation), data_by_generation)
   )
 
   row.names(out) <- NULL
@@ -266,4 +258,12 @@ rmvnorm_chol <- function(n, mean, sigma) {
 
   storage.mode(out) <- "double"
   out
+}
+
+make_generation_df <- function(i, z) {
+  data.frame(
+    generation = rep.int(i, nrow(z)),
+    x = z[, 1],
+    y = z[, 2]
+  )
 }

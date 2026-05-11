@@ -7,7 +7,7 @@ Authors@R:
       person(given = "Shanjun", family = "Mao", email = "shjmao@hnu.edu.cn", role = c("aut", "cre")),
       person(given = "Sixuan", family = "Liu", role = "aut"),
       person(given = "Xiaodan", family = "Fan", role = "aut"),
-      person(given = "Jie", family = "Hu", role = "aut")      
+      person(given = "Jie", family = "Hu", role = "aut")  
     )
 Description: Computes the geometric TreeAngle statistic for paired generation-structured
     data, with optional normalization following the TDDeltaTheta algorithm.

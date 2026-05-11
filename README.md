@@ -37,7 +37,6 @@ dat <- simdata(
   decay = "power",
   seed = 1
 )
-
 ```
 
 Now compute the TreeAngle statistic:
@@ -81,7 +80,7 @@ The rows and columns have the following meanings:
 ### `alpha`
 
 In this package, `alpha` denotes the coverage proportion.
-alpha = 0.95 means that the angle is estimated to enclose approximately 95% of the points.
+`alpha = 0.95` means that the angle is estimated to enclose approximately 95% of the points.
 
 
 ### `method`
@@ -92,7 +91,7 @@ Available options are:
 - `"min"`: smallest valid candidate angle, giving the tightest admissible angle;
 - `"median"`: median of the valid candidate angles;
 - `"equal"`: candidate chosen by the equal-allocation rule in the original implementation;
-- `"neigh"`: candidate chosen by the neighborhood-adjusted rule in the original implementation.
+- `"neigh"`: candidate chosen by the neighborhood-adjusted rule in the original implementation;
 - `"all"`: return all five original outputs:
   `anglemin`, `anglemedian`, `angleequal`, `anglemean`, and `angleneigh`.
 
@@ -116,8 +115,7 @@ When normalization is used:
 ### Decay options
 
 - `decay = "power"` uses `rho^i`;
-- `decay = "linear"` uses `rho * (1 - (i - 1) / generations)`
-
+- `decay = "linear"` uses `rho * (1 - (i - 1) / generations)`.
 
 
 ## Citation
